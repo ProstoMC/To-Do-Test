@@ -34,19 +34,26 @@ class TaskCell: UITableViewCell {
             titleLabel.attributedText = NSAttributedString(
                 string: title,
                 attributes: [
-                    .foregroundColor: UIColor.gray,
+                    .foregroundColor: UIColor.stroke,
                     .strikethroughStyle: NSUnderlineStyle.single.rawValue,
-                    .strikethroughColor: UIColor.gray
+                    .strikethroughColor: UIColor.stroke
                 ]
             )
-            
             subtitleLabel.text = subtitle
-            subtitleLabel.textColor = .gray
+            subtitleLabel.textColor = UIColor.stroke
         }
         else {
             checkImageView.image = UIImage(systemName: "circle")
             checkImageView.tintColor = .gray
-            titleLabel.text = title
+            //Prepare texts
+            titleLabel.attributedText = NSAttributedString(
+                string: title,
+                attributes: [
+                    .foregroundColor: UIColor.text,
+                    .strikethroughStyle: NSUnderlineStyle.single.rawValue,
+                    .strikethroughColor: UIColor.gray.withAlphaComponent(0)
+                ]
+            )
             subtitleLabel.text = subtitle
         }
         
@@ -70,7 +77,7 @@ extension TaskCell {
         
         NSLayoutConstraint.activate([
             checkImageView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 20),
-            checkImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 12),
+            checkImageView.topAnchor.constraint(equalTo: contentView.topAnchor, constant: 10),
             checkImageView.heightAnchor.constraint(equalToConstant: 30),
             checkImageView.widthAnchor.constraint(equalToConstant: 30)
         ])
@@ -101,10 +108,10 @@ extension TaskCell {
         
         NSLayoutConstraint.activate([
             subtitleLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 3),
+            subtitleLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 1),
             subtitleLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             subtitleLabel.heightAnchor.constraint(lessThanOrEqualToConstant: 50),
-            subtitleLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 20)
+            subtitleLabel.heightAnchor.constraint(greaterThanOrEqualToConstant: 1)
         ])
     }
     
@@ -119,10 +126,10 @@ extension TaskCell {
         
         NSLayoutConstraint.activate([
             dateLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
-            dateLabel.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 3),
+            dateLabel.topAnchor.constraint(equalTo: subtitleLabel.bottomAnchor, constant: 1),
             dateLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
             dateLabel.heightAnchor.constraint(equalToConstant: 20),
-            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -12)
+            dateLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -10)
         ])
     }
 }

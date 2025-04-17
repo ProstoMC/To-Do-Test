@@ -7,31 +7,34 @@
 
 import UIKit
 
-struct CellContent {
-    var title: String
-    var body: String
-    var isDone: Bool
-    var date: String
+
+
+
+protocol MainViewProtocol: AnyObject {
+    func updateView(_ viewModel: MainViewModel)
 }
 
+
 class MainViewController: UIViewController, UISearchResultsUpdating {
+    var presenter: MainPresenterProtocol!
     
-    
-    var cellsData: [CellContent] = [
-        CellContent(title: "First", body: "First body", isDone: true, date: "12.12.2025"),
-        CellContent(title: "Second", body: "Second bodyp;dkdfldjsf;laksfkskf;laskf;lasf;las;lfkas;lfkas;lfkas;lfa;lskf;a", isDone: false, date: "01.02.2025")
-    ]
+    var cells: [MainCellContent] = []
     
     private var searchController = UISearchController(searchResultsController: nil)
     private var tableView = UITableView()
+    private var bottomView = UIView()
     private var bottomLabel = UILabel()
     private var newTaskButton = UIButton()
     private var infoButton = UIButton()
+    private var blurView: UIVisualEffectView?
+    
     
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        print("MainVC loaded")
         setupUI()
+        presenter.fetchData()
     }
     
     func updateSearchResults(for searchController: UISearchController) {
@@ -41,7 +44,15 @@ class MainViewController: UIViewController, UISearchResultsUpdating {
     @objc func infoButtonTapped() {
         return
     }
+    
+}
 
+extension MainViewController: MainViewProtocol {
+    func updateView(_ viewModel: MainViewModel) {
+        cells = viewModel.items
+        bottomLabel.text = viewModel.bottomInfoText
+        tableView.reloadData()
+    }
     
 }
 
@@ -53,7 +64,7 @@ extension MainViewController {
         setupSearchController()
         setupTableView()
         setupBottomBlock()
-        
+
     }
     private func setupNavigationBar() {
         self.title = String(localized: "Tasks")
@@ -62,11 +73,12 @@ extension MainViewController {
         appearance.backgroundColor = .background
         appearance.largeTitleTextAttributes = [.foregroundColor: UIColor.white]
         appearance.titleTextAttributes = [.foregroundColor: UIColor.white]
+        navigationItem.largeTitleDisplayMode = .automatic
         
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
-        
+
     }
     
     private func setupSearchController() {
@@ -78,32 +90,7 @@ extension MainViewController {
         
     }
     
-    private func setupTableView() {
-        
-        view.addSubview(tableView)
-        tableView.translatesAutoresizingMaskIntoConstraints = false
-        
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.register(TaskCell.self, forCellReuseIdentifier: "cell")
-        tableView.rowHeight = UITableView.automaticDimension
-        
-        tableView.separatorStyle = .singleLine
-        tableView.separatorColor = .lightGray
-        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
-        tableView.tableHeaderView = UIView() //Hide top separator
-        tableView.backgroundColor = .background
-        
-        NSLayoutConstraint.activate([
-            tableView.topAnchor.constraint(equalTo: view.topAnchor),
-            tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
-            tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
-            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        ])
-    }
-    
     private func setupBottomBlock() {
-        let bottomView = UIView()
         bottomView.translatesAutoresizingMaskIntoConstraints = false
         view.addSubview(bottomView)
         bottomView.backgroundColor = .additionalGray
@@ -144,7 +131,7 @@ extension MainViewController {
             bottomLabel.centerXAnchor.constraint(equalTo: bottomView.centerXAnchor)
         ])
         
-        bottomLabel.text = String(localized: "\(cellsData.count) tasks")
+        bottomLabel.text = String(localized: "\(cells.count) tasks")
         
         infoButton.translatesAutoresizingMaskIntoConstraints = false
         bottomView.addSubview(infoButton)
@@ -160,32 +147,75 @@ extension MainViewController {
             infoButton.widthAnchor.constraint(equalToConstant: 30),
             infoButton.topAnchor.constraint(equalTo: bottomView.topAnchor, constant: 10)
         ])
-        
-        
     }
+    
+    private func setupTableView() {
+        
+        view.addSubview(tableView)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.register(TaskCell.self, forCellReuseIdentifier: "cell")
+        tableView.rowHeight = UITableView.automaticDimension
+        
+        tableView.separatorStyle = .singleLine
+        tableView.separatorColor = .additionalGray
+        tableView.separatorInset = UIEdgeInsets(top: 0, left: 20, bottom: 0, right: 20)
+        tableView.tableHeaderView = UIView() //Hide top separator
+        tableView.backgroundColor = .background
+        
+        NSLayoutConstraint.activate([
+            tableView.topAnchor.constraint(equalTo: view.topAnchor),
+            tableView.leftAnchor.constraint(equalTo: view.leftAnchor),
+            tableView.rightAnchor.constraint(equalTo: view.rightAnchor),
+            tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -80)
+        ])
+    }
+    
+
 }
 
 extension MainViewController: UITableViewDelegate, UITableViewDataSource {
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return cellsData.count
+        return cells.count
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath) as! TaskCell
+        cell.selectionStyle = .none
+        
         
         cell.configure(
-            title: cellsData[indexPath.row].title,
-            subtitle: cellsData[indexPath.row].body,
-            date: cellsData[indexPath.row].date,
-            isDone: cellsData[indexPath.row].isDone
+            title: cells[indexPath.row].title,
+            subtitle: cells[indexPath.row].body,
+            date: cells[indexPath.row].date,
+            isDone: cells[indexPath.row].isDone
         )
         
-        //Hide bottom separator
-        if indexPath.row == cellsData.count-1 {
-            cell.separatorInset = UIEdgeInsets(top: 0, left: 0, bottom: 0, right: .greatestFiniteMagnitude)
-        }
-        
         return cell
+    }
+    
+    func tableView(_ tableView: UITableView, contextMenuConfigurationForRowAt indexPath: IndexPath, point: CGPoint) -> UIContextMenuConfiguration? {
+
+        return UIContextMenuConfiguration(identifier: nil, previewProvider: { [self] in
+            
+            let blurView = BlurView()
+            blurView.configure(with: cells[indexPath.row])
+            return blurView
+        }, actionProvider: { _ in
+            
+            let edit = UIAction(title: String(localized: "Edit"), image: UIImage(systemName: "square.and.pencil")) { _ in
+                return
+            }
+            let share = UIAction(title: String(localized: "Share"), image: UIImage(systemName: "square.and.arrow.up")) { _ in
+                return
+            }
+            let delete = UIAction(title: String(localized: "Delete"), image: UIImage(systemName: "trash"), attributes: .destructive) { [self] _ in
+                presenter.deleteTask(index: indexPath.row)
+            }
+            return UIMenu(title: "", children: [edit, share, delete])
+        })
     }
     
     
